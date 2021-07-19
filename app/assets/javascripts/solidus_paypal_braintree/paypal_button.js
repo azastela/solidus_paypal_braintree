@@ -75,8 +75,13 @@ SolidusPaypalBraintree.PaypalButton.prototype._tokenizeCallback = function(token
   }
 
   const params = this._transactionParams(payload);
+  const beforeTransaction = this._options.beforeTransaction;
   const onTransactionSuccess = this._options.onTransactionSuccess;
+  const onTransactionError = this._options.onTransactionError;
   const transactionsUrl = this._options.transactionsUrl || SolidusPaypalBraintree.config.paths.transactions;
+
+  if (beforeTransaction)
+    beforeTransaction();
 
   return Spree.ajax({
     url: transactionsUrl,
@@ -106,7 +111,11 @@ SolidusPaypalBraintree.PaypalButton.prototype._tokenizeCallback = function(token
       }
 
       console.error("Error submitting transaction: " + errorText);
-      SolidusPaypalBraintree.showError(errorText);
+      if(onTransactionError) {
+        onTransactionError(xhr.responseJSON);
+      } else {
+        SolidusPaypalBraintree.showError(errorText);
+      }
     },
   });
 };
